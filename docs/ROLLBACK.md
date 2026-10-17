@@ -261,6 +261,24 @@ Ami a workerben van, és **nincs** a repóban: a Meta-adatok (token, App Secret,
 verify token) a `WaConfig` Durable Objectben — a rollback nem törli őket. Új /admin kulcs: új
 lenyomat az `ADMIN_KEY_SHA256`-ba + deploy (README → „A /admin kulcs").
 
+## glux-kontroll (Cloudflare Worker) — GluX app 2.2.0
+
+### Barcode lookup `ai=0` (2.2.0 M2, branch `agent/glux-kontroll-barcode-no-ai`)
+
+Additive: `GET /api/app/food/barcode?ai=0` skips the name-based AI estimate (OpenAI). Without the
+parameter (every build before 2.2: iOS 2.1.x, Android 1.0.x) the behaviour is byte-identical.
+
+**Release order:** merge and deploy this BEFORE (or together with) the first GluX 2.2 iOS
+TestFlight or Android build from `claude/m2-ai-consent`, and verify on the live route: a named
+product without nutrition data, requested with `ai=0`, answers `not_found` with `productName`,
+and `npx wrangler tail glux-kontroll` shows no OpenAI call for it.
+
+**Rollback:** `git revert <squash-sha> && git push origin master` (auto-deploy).
+⚠️ While any 2.2 build is out, a revert **silently re-enables the AI fallback for people who did
+not consent**: the old worker ignores `ai=0` and sends the product name to OpenAI. Do not revert
+on its own — only together with pulling the 2.2 build or a client-side fix, and record it in
+the agent log.
+
 ## task-board (GitHub Pages)
 
 **Live:** https://hristos0527.github.io/linx-presentation-site/task-board.html  
